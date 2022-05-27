@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_modular/flutter_modular.dart';
 import 'package:nasa_app/app/modules/image_of_the_day/domain/failures/date_not_allowed_failure.dart';
 import 'package:nasa_app/app/modules/image_of_the_day/domain/failures/image_of_the_day_failure.dart';
 import 'package:nasa_app/app/modules/image_of_the_day/domain/usecase/get_image_of_the_day.dart';
@@ -11,11 +12,16 @@ import 'package:nasa_app/app/modules/image_of_the_day/presentation/blocs/get_ima
 
 import 'events/get_image_of_the_day_event.dart';
 
-class GetImageOfTheDayBloc extends Bloc<GetImageOfTheDayEvents, GetImageOfTheDayStates> {
+class GetImageOfTheDayBloc extends Bloc<GetImageOfTheDayEvents, GetImageOfTheDayStates> implements Disposable {
   final GetImageOfTheDay usecase;
 
   GetImageOfTheDayBloc(this.usecase) : super(GetImageOfTheDayLoadingState()) {
     on<GetImageOfTheDayEvent>(_mapGetImageOfTheDayEventToState);
+  }
+
+  @override
+  void dispose() {
+    close();
   }
 
   void _mapGetImageOfTheDayEventToState(GetImageOfTheDayEvent event, Emitter<GetImageOfTheDayStates> emit) async {
