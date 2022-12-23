@@ -1,10 +1,13 @@
 import 'package:dartz/dartz.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:nasa_app/app/core/failures/failure.dart';
+import 'package:nasa_app/app/core/failures/generic_failure.dart';
 import 'package:nasa_app/app/modules/image_of_the_day/domain/entities/image_of_the_day.dart';
 import 'package:nasa_app/app/modules/image_of_the_day/domain/entities/image_of_the_day_parameters.dart';
 import 'package:nasa_app/app/modules/image_of_the_day/domain/failures/date_not_allowed_failure.dart';
 import 'package:nasa_app/app/modules/image_of_the_day/domain/failures/image_of_the_day_failure.dart';
+import 'package:nasa_app/app/modules/image_of_the_day/domain/failures/image_of_the_day_failures.dart';
 import 'package:nasa_app/app/modules/image_of_the_day/domain/repositories/image_of_the_day_repository.dart';
 import 'package:nasa_app/app/modules/image_of_the_day/domain/usecase/get_image_of_the_day.dart';
 
@@ -32,6 +35,22 @@ void main() {
     expect(result.fold(id, id), isA<ImageOfTheDay>());
   });
 
+  test('Must return an Failure superclass failure on error', () async {
+    when(() => repository(any())).thenAnswer((invocation) async => Left(ImageOfTheDayFailure('error')));
+
+    final result = await usecase(parameters);
+
+    expect(result.fold(id, id), isA<Failure>());
+  });
+
+  test('Must return an ImageOfTheDayFailures superclass failure on error', () async {
+    when(() => repository(any())).thenAnswer((invocation) async => Left(ImageOfTheDayFailure('error')));
+
+    final result = await usecase(parameters);
+
+    expect(result.fold(id, id), isA<ImageOfTheDayFailures>());
+  });
+
   test('Must return an ImageOfTheDayFailure failure on error', () async {
     when(() => repository(any())).thenAnswer((invocation) async => Left(ImageOfTheDayFailure('error')));
 
@@ -46,5 +65,13 @@ void main() {
     final result = await usecase(parameters);
 
     expect(result.fold(id, id), isA<DateNotAllowedFailure>());
+  });
+
+  test('Must return an GenericFailure failure on error', () async {
+    when(() => repository(any())).thenAnswer((invocation) async => Left(GenericFailure('error')));
+
+    final result = await usecase(parameters);
+
+    expect(result.fold(id, id), isA<GenericFailure>());
   });
 }

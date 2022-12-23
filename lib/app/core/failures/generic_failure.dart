@@ -1,4 +1,4 @@
-import 'package:nasa_app/app/core/failures/failure.dart';
+import 'failure.dart';
 
 class GenericFailure implements Failure {
   final String message;

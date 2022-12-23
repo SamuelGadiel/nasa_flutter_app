@@ -1,4 +1,4 @@
-import 'package:nasa_app/app/modules/image_of_the_day/domain/entities/image_of_the_day.dart';
+import '../../domain/entities/image_of_the_day.dart';
 
 class ImageOfTheDayModel extends ImageOfTheDay {
   final String copyright;

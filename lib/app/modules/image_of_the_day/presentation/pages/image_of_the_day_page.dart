@@ -1,131 +1,146 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_modular/flutter_modular.dart';
 import 'package:intl/intl.dart';
-import 'package:nasa_app/app/modules/image_of_the_day/domain/entities/image_of_the_day_parameters.dart';
-import 'package:nasa_app/app/modules/image_of_the_day/presentation/blocs/get_image_of_the_day_bloc/events/get_image_of_the_day_event.dart';
-import 'package:nasa_app/app/modules/image_of_the_day/presentation/blocs/get_image_of_the_day_bloc/events/select_date_event.dart';
-import 'package:nasa_app/app/modules/image_of_the_day/presentation/blocs/get_image_of_the_day_bloc/get_image_of_the_day_bloc.dart';
-import 'package:nasa_app/app/modules/image_of_the_day/presentation/blocs/get_image_of_the_day_bloc/states/date_not_allowed_failure_state.dart';
-import 'package:nasa_app/app/modules/image_of_the_day/presentation/blocs/get_image_of_the_day_bloc/states/get_image_of_the_day_loading_state.dart';
-import 'package:nasa_app/app/modules/image_of_the_day/presentation/blocs/get_image_of_the_day_bloc/states/get_image_of_the_day_states.dart';
-import 'package:nasa_app/app/modules/image_of_the_day/presentation/blocs/get_image_of_the_day_bloc/states/image_of_the_day_failure_state.dart';
+
+import '../../../../core/helpers/error_dialog.dart';
+import '../blocs/get_image_of_the_day_bloc/events/catch_loading_image_error_event.dart';
+import '../blocs/get_image_of_the_day_bloc/events/get_image_of_the_day_event.dart';
+import '../blocs/get_image_of_the_day_bloc/events/select_date_event.dart';
+import '../blocs/get_image_of_the_day_bloc/image_of_the_day_bloc.dart';
+import '../blocs/get_image_of_the_day_bloc/states/failure_states/date_not_allowed_failure_state.dart';
+import '../blocs/get_image_of_the_day_bloc/states/failure_states/image_of_the_day_failure_state.dart';
+import '../blocs/get_image_of_the_day_bloc/states/failure_states/image_of_the_day_failure_states.dart';
+import '../blocs/get_image_of_the_day_bloc/states/get_image_of_the_day_loading_state.dart';
+import '../blocs/get_image_of_the_day_bloc/states/image_of_the_day_states.dart';
 
 class ImageOfTheDayPage extends StatefulWidget {
-  const ImageOfTheDayPage({Key? key}) : super(key: key);
+  const ImageOfTheDayPage({super.key});
 
   @override
   State<ImageOfTheDayPage> createState() => _ImageOfTheDayPageState();
 }
 
 class _ImageOfTheDayPageState extends State<ImageOfTheDayPage> {
-  final getImageOfTheDayBloc = Modular.get<GetImageOfTheDayBloc>();
+  final getImageOfTheDayBloc = Modular.get<ImageOfTheDayBloc>();
 
   @override
   void initState() {
+    getImageOfTheDayBloc.add(GetImageOfTheDayEvent(date: ''));
+
     super.initState();
-    getImageOfTheDayBloc.add(GetImageOfTheDayEvent(ImageOfTheDayParameters(date: '')));
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Nasa app"),
+        title: const Text('Nasa image of the day'),
         centerTitle: true,
       ),
       body: Center(
-        child: BlocConsumer<GetImageOfTheDayBloc, GetImageOfTheDayStates>(
+        child: BlocConsumer<ImageOfTheDayBloc, ImageOfTheDayStates>(
           bloc: getImageOfTheDayBloc,
           listener: (context, state) {
-            if (state is ImageOfTheDayFailureState) {
-              showDialog(
+            if (state is ImageOfTheDayFailureStates) {
+              VoidCallback? callback;
+
+              if (state is ImageOfTheDayFailureState) {
+                callback = () => getImageOfTheDayBloc.add(GetImageOfTheDayEvent(date: ''));
+              }
+
+              ErrorDialog.show(
                 context: context,
-                builder: (context) {
-                  return AlertDialog(
-                    title: Text('Erro'),
-                    content: Text(state.failure.message),
-                    actions: [
-                      TextButton(
-                        onPressed: () {
-                          getImageOfTheDayBloc.add(GetImageOfTheDayEvent(ImageOfTheDayParameters(date: '')));
-                          Modular.to.pop();
-                        },
-                        child: Text('Tentar novamente'),
-                      ),
-                      TextButton(
-                        onPressed: () => Modular.to.pop(),
-                        child: Text('Fechar'),
-                      ),
-                    ],
-                  );
-                },
-              );
-            } else if (state is DateNotAllowedFailureState) {
-              showDialog(
-                context: context,
-                builder: (context) {
-                  return AlertDialog(
-                    title: Text('Erro'),
-                    content: Text(state.failure.message),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Modular.to.pop(),
-                        child: Text('Fechar'),
-                      ),
-                    ],
-                  );
-                },
+                message: state.failure.message,
+                onPressed: callback,
               );
             }
           },
           builder: (context, state) {
             if (state is GetImageOfTheDayLoadingState) {
-              return CircularProgressIndicator();
-            } else if (state is ImageOfTheDayFailureState) {
+              return const CircularProgressIndicator();
+            }
+
+            if (state is ImageOfTheDayFailureState) {
               return Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text('Ocorreu um erro ao buscar a imagem'),
-                  SizedBox(height: 16),
+                  Text(state.failure.message),
+                  const SizedBox(height: 16),
                   ElevatedButton(
-                    onPressed: () {
-                      getImageOfTheDayBloc.add(GetImageOfTheDayEvent(ImageOfTheDayParameters(date: '')));
-                    },
-                    child: Text('Tentar novamente'),
+                    onPressed: () => getImageOfTheDayBloc.add(GetImageOfTheDayEvent(date: '')),
+                    child: const Text('Tentar novamente'),
                   ),
                 ],
               );
             }
 
-            return Image.network(
-              getImageOfTheDayBloc.imageOfTheDay.image,
-              errorBuilder: (context, error, stackTrace) {
-                return Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.error, color: Colors.red, size: 48),
-                    Text(
-                      'Ocorreu algum erro :(',
-                      style: TextStyle(color: Colors.red, fontSize: 22),
+            return Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Expanded(
+                  child: CachedNetworkImage(
+                    imageUrl: getImageOfTheDayBloc.imageOfTheDay.image,
+                    errorWidget: (context, url, error) {
+                      getImageOfTheDayBloc.add(CatchLoadingImageErrorEvent());
+                      return const SizedBox();
+                    },
+                    progressIndicatorBuilder: (context, url, progress) {
+                      return Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text('Carregando'),
+                          Padding(
+                            padding: const EdgeInsets.all(12.0),
+                            child: LinearProgressIndicator(value: progress.progress),
+                          ),
+                        ],
+                      );
+                    },
+                    imageBuilder: (context, imageProvider) {
+                      return Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Visibility(
+                            visible: state is! DateNotAllowedFailureState,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 8),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(14),
+                                child: Image(image: imageProvider),
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                ),
+                Container(
+                  width: MediaQuery.of(context).size.width,
+                  height: 90,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    boxShadow: [
+                      BoxShadow(
+                        blurRadius: 14,
+                        offset: const Offset(0, 2),
+                        color: Colors.grey.shade400,
+                      )
+                    ],
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(20),
+                      topRight: Radius.circular(20),
                     ),
-                    Padding(
-                      padding: EdgeInsets.only(top: 16),
-                      child: ElevatedButton(
-                        onPressed: () {
-                          getImageOfTheDayBloc.add(GetImageOfTheDayEvent(ImageOfTheDayParameters(date: '')));
-                        },
-                        child: Text('Recarregar'),
-                      ),
-                    ),
-                  ],
-                );
-              },
-              loadingBuilder: (context, child, progress) {
-                if (progress == null) {
-                  return Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
+                      Text(
+                        DateFormat('dd/MM/yyyy').format(getImageOfTheDayBloc.selectedDate),
+                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+                      ),
                       ElevatedButton(
                         onPressed: () async {
                           final date = await showDatePicker(
@@ -136,37 +151,17 @@ class _ImageOfTheDayPageState extends State<ImageOfTheDayPage> {
                           );
 
                           if (date != null) {
-                            getImageOfTheDayBloc.add(SelectDateEvent(date));
-
-                            getImageOfTheDayBloc.add(
-                              GetImageOfTheDayEvent(
-                                ImageOfTheDayParameters(date: DateFormat('yyyy-MM-dd').format(date)),
-                              ),
-                            );
+                            getImageOfTheDayBloc
+                              ..add(SelectDateEvent(date))
+                              ..add(GetImageOfTheDayEvent(date: DateFormat('yyyy-MM-dd').format(date)));
                           }
                         },
-                        child: Text('Selecione uma data'),
-                      ),
-                      Text('Data: ${DateFormat('dd/MM/yyyy').format(getImageOfTheDayBloc.selectedDate)}'),
-                      Visibility(
-                        visible: !(state is DateNotAllowedFailureState),
-                        child: child,
-                      ),
+                        child: const Text('Selecionar data'),
+                      )
                     ],
-                  );
-                }
-
-                return Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text('Carregando'),
-                    Padding(
-                      padding: EdgeInsets.all(8.0),
-                      child: LinearProgressIndicator(value: progress.cumulativeBytesLoaded / progress.expectedTotalBytes!),
-                    ),
-                  ],
-                );
-              },
+                  ),
+                )
+              ],
             );
           },
         ),

@@ -1,11 +1,10 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_modular/flutter_modular.dart';
-import 'package:nasa_app/app/modules/image_of_the_day/presentation/blocs/get_image_of_the_day_bloc/get_image_of_the_day_bloc.dart';
-import 'package:nasa_app/app/modules/image_of_the_day/presentation/pages/image_of_the_day_page.dart';
 
 import 'domain/usecase/get_image_of_the_day.dart';
 import 'external/datasources/image_of_the_day_datasource_implementation.dart';
 import 'infrastructure/repositories/image_of_the_day_repository_implementation.dart';
+import 'presentation/blocs/get_image_of_the_day_bloc/image_of_the_day_bloc.dart';
+import 'presentation/pages/image_of_the_day_page.dart';
 
 class ImageOfTheDayModule extends Module {
   @override
@@ -13,11 +12,11 @@ class ImageOfTheDayModule extends Module {
     Bind((i) => GetImageOfTheDayImplementation(i())),
     Bind((i) => ImageOfTheDayRepositoryImplementation(i())),
     Bind((i) => ImageOfTheDayDatasourceImplementation(i())),
-    Bind((i) => GetImageOfTheDayBloc(i())),
+    Bind((i) => ImageOfTheDayBloc(i())),
   ];
 
   @override
   final List<ModularRoute> routes = [
-    ChildRoute("/", child: (context, args) => ImageOfTheDayPage()),
+    ChildRoute('/', child: (context, args) => const ImageOfTheDayPage()),
   ];
 }

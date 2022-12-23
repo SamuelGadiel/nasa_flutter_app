@@ -13,7 +13,10 @@
       "name": "Flutter: Run all Tests",
       "type": "dart",
       "request": "launch",
-      "program": "./test/"
+      "program": "./test/",
+      "args": [
+        "--coverage"
+      ]
     },
   ]
 }

@@ -1,3 +1,3 @@
 class Secrets {
-  static get apiKey => 'DEMO_KEY';
+  static String get apiKey => 'DEMO_KEY';
 }

@@ -1,5 +1,5 @@
 abstract class ImageOfTheDayDatasourceErrors implements Exception {
   final String message;
 
-  ImageOfTheDayDatasourceErrors(this.message);
+  const ImageOfTheDayDatasourceErrors(this.message); // coverage:ignore-line
 }
